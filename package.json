@@ -1,0 +1,20 @@
+{
+  "name": "esms-room-v22",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build"
+  },
+  "description": "Vue 2 接码室前端",
+  "dependencies": {
+    "@vue/cli-plugin-babel": "^5.0.9",
+    "@vue/cli-service": "^5.0.9",
+    "core-js": "^3.48.0",
+    "element-ui": "^2.15.14",
+    "sass": "^1.97.3",
+    "sass-loader": "^16.0.7",
+    "vue": "^2.7.16",
+    "vue-template-compiler": "^2.7.16"
+  }
+}
