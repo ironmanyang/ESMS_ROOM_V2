@@ -5,14 +5,8 @@
 
     <header class="hero-card">
       <div class="refresh-box">
-        <div
-            class="refresh-button"
-            role="button"
-            tabindex="0"
-            @click="refreshLatestSms"
-            @keydown.enter="refreshLatestSms"
-            @keydown.space.prevent="refreshLatestSms"
-        >
+        <div class="refresh-button" role="button" tabindex="0" @click="refreshLatestSms"
+             @keydown.enter="refreshLatestSms" @keydown.space.prevent="refreshLatestSms">
           <i class="el-icon-refresh"></i>
         </div>
       </div>
@@ -49,20 +43,11 @@
         </div>
 
         <div v-if="roomData.phones && roomData.phones.length" class="phone-list">
-          <button
-              v-for="phone in roomData.phones"
-              :key="phone.phone"
-              :class="{ active: selectedPhone === phone.phone }"
-              class="phone-item"
-              @click="fetchPhoneSms(phone.phone)"
-          >
+          <button v-for="phone in roomData.phones" :key="phone.phone" :class="{ active: selectedPhone === phone.phone }"
+                  class="phone-item" @click="fetchPhoneSms(phone.phone)">
             <div class="phone-item-top">
               <div class="phone-meta">
-                <img
-                  :src="getCountryFlagImage(phone.code_country)"
-                  alt=""
-                  class="flag-image"
-                >
+                <img :src="getCountryFlagImage(phone.code_country)" alt="" class="flag-image">
                 <div>
                   <div class="phone-number">{{ phone.phone }}</div>
                   <div class="phone-country">
@@ -96,14 +81,7 @@
             <h2>{{ activePanelTitle }}</h2>
           </div>
           <div class="panel-header-actions">
-            <el-button
-                v-if="selectedPhone"
-                icon="el-icon-back"
-                plain
-                size="small"
-                type="primary"
-                @click="backToAllSms"
-            >
+            <el-button v-if="selectedPhone" icon="el-icon-back" plain size="small" type="primary" @click="backToAllSms">
               返回最新
             </el-button>
           </div>
@@ -111,11 +89,8 @@
 
         <div class="sms-list-container">
           <div v-if="displaySms.length" class="sms-list">
-            <article
-                v-for="sms in displaySms"
-                :key="`${sms.phone || 'all'}-${sms.time_get}-${sms.message}`"
-                class="sms-item"
-            >
+            <article v-for="sms in displaySms" :key="`${sms.phone || 'all'}-${sms.time_get}-${sms.message}`"
+                     class="sms-item">
               <div class="sms-item-header">
                 <div class="sms-tags">
                   <span v-if="sms.keyword_matched" class="sms-keyword">
@@ -134,12 +109,8 @@
                 <el-button size="small" type="primary" @click="copyToClipboard(sms.message)">
                   复制全文
                 </el-button>
-                <el-button
-                    v-if="extractCode(sms.message)"
-                    plain
-                    size="small"
-                    @click="copyToClipboard(extractCode(sms.message))"
-                >
+                <el-button v-if="extractCode(sms.message)" plain size="small"
+                           @click="copyToClipboard(extractCode(sms.message))">
                   复制验证码
                 </el-button>
               </div>
@@ -151,18 +122,12 @@
           </div>
         </div>
 
-        <div
-            v-if="selectedPhone && phonePagination[selectedPhone] && phonePagination[selectedPhone].totalPages > 1"
-            class="pagination-wrap"
-        >
-          <el-pagination
-              :current-page="phonePagination[selectedPhone].currentPage"
-              :page-size="phonePagination[selectedPhone].pageSize"
-              :total="phonePagination[selectedPhone].totalItems"
-              background
-              layout="prev, pager, next"
-              @current-change="handleCurrentChange"
-          />
+        <div v-if="selectedPhone && phonePagination[selectedPhone] && phonePagination[selectedPhone].totalPages > 1"
+             class="pagination-wrap">
+          <el-pagination :current-page="phonePagination[selectedPhone].currentPage"
+                         :page-size="phonePagination[selectedPhone].pageSize"
+                         :total="phonePagination[selectedPhone].totalItems"
+                         background layout="prev, pager, next" @current-change="handleCurrentChange"/>
         </div>
       </section>
     </main>
@@ -228,6 +193,7 @@ export default {
   },
   mounted() {
     this.initRoomId();
+
     window.copyToClipboard = text => this.copyToClipboard(text);
     if (this.roomId) {
       this.resetRoomState();
@@ -286,7 +252,6 @@ export default {
     handleWebSocketOpen() {
       this.wsConnected = true;
       this.sendLogin();
-      console.log('aaa')
       this.$message.success('房间连接成功');
     },
     handleWebSocketError() {
@@ -330,7 +295,7 @@ export default {
     },
     processWebSocketMessage(data) {
       this.lastUpdatedAt = Math.floor(Date.now() / 1000);
-
+      console.log('收到消息:', this.lastUpdatedAt);
       if (data.ping === 'pang') {
         this.sendSocketPayload({ping: 'pang'});
         return;
@@ -1062,6 +1027,7 @@ textarea {
 }
 
 .el-pagination.is-background {
+
   .el-pager li,
   .btn-next,
   .btn-prev {
@@ -1076,6 +1042,7 @@ textarea {
 
 @media (max-width: 1200px) {
   .app-shell {
+
     .hero-card,
     .footer-card {
       flex-direction: column;
@@ -1099,6 +1066,7 @@ textarea {
     }
 
     .panel {
+
       .panel-header,
       .sms-item .sms-item-header,
       .sms-item .sms-sender-row {
@@ -1115,6 +1083,7 @@ textarea {
 
     .phone-list {
       .phone-item {
+
         .phone-item-top,
         .phone-item-bottom {
           flex-direction: column;
@@ -1130,7 +1099,6 @@ textarea {
       }
 
       .hero-status-group {
-
       }
     }
 
