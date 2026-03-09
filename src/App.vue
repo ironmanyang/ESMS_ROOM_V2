@@ -6,16 +6,14 @@
     <header class="hero-card">
       <div class="refresh-box">
         <div class="refresh-button" role="button" tabindex="0" @click="refreshLatestSms"
-             @keydown.enter="refreshLatestSms" @keydown.space.prevent="refreshLatestSms">
+          @keydown.enter="refreshLatestSms" @keydown.space.prevent="refreshLatestSms">
           <i class="el-icon-refresh"></i>
         </div>
       </div>
       <div class="name-box">
         <p class="hero-tag">ESMS</p>
         <h1>{{ roomData.title || '接码室控制台' }}</h1>
-        <p class="hero-subtitle">
-          实时接收短信、筛选号码状态，并快速复制验证码。
-        </p>
+
       </div>
       <div class="hero-status-group">
 
@@ -44,7 +42,7 @@
 
         <div v-if="roomData.phones && roomData.phones.length" class="phone-list">
           <button v-for="phone in roomData.phones" :key="phone.phone" :class="{ active: selectedPhone === phone.phone }"
-                  class="phone-item" @click="fetchPhoneSms(phone.phone)">
+            class="phone-item" @click="fetchPhoneSms(phone.phone)">
             <div class="phone-item-top">
               <div class="phone-meta">
                 <img :src="getCountryFlagImage(phone.code_country)" alt="" class="flag-image">
@@ -90,7 +88,7 @@
         <div class="sms-list-container">
           <div v-if="displaySms.length" class="sms-list">
             <article v-for="sms in displaySms" :key="`${sms.phone || 'all'}-${sms.time_get}-${sms.message}`"
-                     class="sms-item">
+              class="sms-item">
               <div class="sms-item-header">
                 <div class="sms-tags">
                   <span v-if="sms.keyword_matched" class="sms-keyword">
@@ -110,7 +108,7 @@
                   复制全文
                 </el-button>
                 <el-button v-if="extractCode(sms.message)" plain size="small"
-                           @click="copyToClipboard(extractCode(sms.message))">
+                  @click="copyToClipboard(extractCode(sms.message))">
                   复制验证码
                 </el-button>
               </div>
@@ -123,11 +121,10 @@
         </div>
 
         <div v-if="selectedPhone && phonePagination[selectedPhone] && phonePagination[selectedPhone].totalPages > 1"
-             class="pagination-wrap">
+          class="pagination-wrap">
           <el-pagination :current-page="phonePagination[selectedPhone].currentPage"
-                         :page-size="phonePagination[selectedPhone].pageSize"
-                         :total="phonePagination[selectedPhone].totalItems"
-                         background layout="prev, pager, next" @current-change="handleCurrentChange"/>
+            :page-size="phonePagination[selectedPhone].pageSize" :total="phonePagination[selectedPhone].totalItems"
+            background layout="prev, pager, next" @current-change="handleCurrentChange" />
         </div>
       </section>
     </main>
@@ -297,7 +294,7 @@ export default {
       this.lastUpdatedAt = Math.floor(Date.now() / 1000);
       console.log('收到消息:', this.lastUpdatedAt);
       if (data.ping === 'pang') {
-        this.sendSocketPayload({ping: 'pang'});
+        this.sendSocketPayload({ ping: 'pang' });
         return;
       }
 
@@ -446,32 +443,33 @@ export default {
       }
       const date = new Date(Number(timestamp) * 1000);
       const options = withoutDate
-          ? {hour: '2-digit', minute: '2-digit', second: '2-digit'}
-          : {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'};
+        ? { hour: '2-digit', minute: '2-digit', second: '2-digit' }
+        : { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
       return date.toLocaleString('zh-CN', options);
     },
     formatEndTime(timestamp) {
+      console.log(timestamp, 'aaaa');
       if (!timestamp) {
         return '';
       }
-      if (Number(timestamp) > 2050 * 365 * 24 * 3600) {
+      if (Number(timestamp) >= 4070880000) {
         return '永久有效';
       }
       return this.formatTime(timestamp);
     },
     escapeHtml(value) {
       return String(value || '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     },
     processSmsContent(content) {
       const safeContent = this.escapeHtml(content).replace(/\n/g, '<br>');
       return safeContent.replace(
-          /(\d{4,8})/g,
-          '<span class="highlighted-number" onclick="window.copyToClipboard(\'$1\')">$1</span>'
+        /(\d{4,8})/g,
+        '<span class="highlighted-number" onclick="window.copyToClipboard(\'$1\')">$1</span>'
       );
     },
     extractCode(content) {
@@ -507,9 +505,9 @@ export default {
         return;
       }
       this.fetchPhoneSms(
-          this.selectedPhone,
-          page,
-          this.phonePagination[this.selectedPhone].pageSize
+        this.selectedPhone,
+        page,
+        this.phonePagination[this.selectedPhone].pageSize
       );
     }
   }
@@ -531,8 +529,8 @@ body {
   min-height: 100%;
   font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
   background: radial-gradient(circle at top left, rgba(78, 132, 255, 0.25), transparent 26%),
-  radial-gradient(circle at top right, rgba(0, 219, 198, 0.16), transparent 18%),
-  linear-gradient(160deg, #07111f 0%, #0a1630 42%, #050912 100%);
+    radial-gradient(circle at top right, rgba(0, 219, 198, 0.16), transparent 18%),
+    linear-gradient(160deg, #07111f 0%, #0a1630 42%, #050912 100%);
   color: #e8f0ff;
 }
 
@@ -546,15 +544,22 @@ textarea {
   font: inherit;
 }
 
-#app {
-  min-height: 100vh;
-}
+// #app {
+//   min-height: 100vh;
+// }
 
 .app-shell {
   position: relative;
-  max-width: 100%;
-  padding: 28px;
+  width: 100%;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 20px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 20px;
 
   .background-glow {
     position: absolute;
@@ -562,7 +567,7 @@ textarea {
     height: 380px;
     border-radius: 50%;
     filter: blur(80px);
-    opacity: 0.28;
+    opacity: 0.20;
     pointer-events: none;
 
     &.background-glow-left {
@@ -586,16 +591,16 @@ textarea {
     backdrop-filter: blur(20px);
     background: rgba(8, 20, 39, 0.76);
     border: 1px solid rgba(118, 160, 255, 0.18);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.20);
   }
 
   .hero-card {
     display: flex;
     justify-content: flex-start;
     gap: 24px;
-    padding: 28px 32px;
+    box-sizing: border-box;
+    padding: 20px;
     border-radius: 26px;
-    margin-bottom: 20px;
 
     .name-box {
       flex: 1;
@@ -615,12 +620,6 @@ textarea {
       color: #70b8ff;
     }
 
-    .hero-subtitle {
-      max-width: 620px;
-      margin: 12px 0 0;
-      color: #92a9d6;
-      line-height: 1.7;
-    }
 
     .refresh-box {
       display: flex;
@@ -633,11 +632,12 @@ textarea {
         justify-content: center;
         width: 60px;
         height: 60px;
-        padding: 0 16px;
+        box-sizing: border-box;
+        padding: 0 20px;
         border-radius: 14px;
         color: #cfe2ff;
         background: rgba(53, 122, 255, 0.08);
-        border: 1px solid rgba(83, 146, 255, 0.28);
+        border: 1px solid rgba(83, 146, 255, 0.20);
         cursor: pointer;
         user-select: none;
         transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
@@ -668,6 +668,7 @@ textarea {
         align-items: center;
         gap: 8px;
         border-radius: 999px;
+        box-sizing: border-box;
         padding: 10px 16px;
         font-size: 13px;
         font-weight: 600;
@@ -692,7 +693,7 @@ textarea {
         &.is-offline {
           color: #ffb3c1;
           background: rgba(255, 74, 110, 0.12);
-          border: 1px solid rgba(255, 74, 110, 0.28);
+          border: 1px solid rgba(255, 74, 110, 0.20);
 
           .dot {
             background: #ff607e;
@@ -711,12 +712,13 @@ textarea {
     display: grid;
     grid-template-columns: 360px minmax(0, 1fr);
     gap: 20px;
-    min-height: calc(100vh - 260px);
+    min-height: calc(100vh - 300px);
   }
 
   .panel {
     border-radius: 26px;
-    padding: 24px;
+    box-sizing: border-box;
+    padding: 20px;
 
     &.panel-left,
     &.panel-right {
@@ -763,6 +765,7 @@ textarea {
     flex-direction: column;
     gap: 12px;
     overflow-y: auto;
+    box-sizing: border-box;
     padding-right: 4px;
 
     .phone-item {
@@ -770,6 +773,7 @@ textarea {
       background: linear-gradient(180deg, rgba(14, 31, 58, 0.96), rgba(11, 24, 46, 0.96));
       color: #fff;
       border-radius: 18px;
+      box-sizing: border-box;
       padding: 16px;
       cursor: pointer;
       transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
@@ -778,7 +782,7 @@ textarea {
       &.active {
         transform: translateY(-2px);
         border-color: rgba(82, 147, 255, 0.65);
-        box-shadow: 0 16px 34px rgba(12, 28, 55, 0.5);
+        box-shadow: 0 16px 34px rgba(12, 20, 55, 0.5);
       }
 
       .phone-item-top,
@@ -822,6 +826,7 @@ textarea {
       }
 
       .status-badge {
+        box-sizing: border-box;
         padding: 7px 12px;
         border-radius: 999px;
         font-size: 12px;
@@ -853,6 +858,7 @@ textarea {
   .sms-list-container {
     flex: 1;
     overflow-y: auto;
+    box-sizing: border-box;
     padding-right: 6px;
 
     .sms-list {
@@ -862,6 +868,7 @@ textarea {
 
       .sms-item {
         border-radius: 20px;
+        box-sizing: border-box;
         padding: 20px;
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 246, 255, 0.96));
         color: #14243f;
@@ -885,7 +892,8 @@ textarea {
           .sms-phone {
             display: inline-flex;
             align-items: center;
-            height: 28px;
+            height: 20px;
+            box-sizing: border-box;
             padding: 0 10px;
             border-radius: 999px;
             font-size: 12px;
@@ -927,6 +935,7 @@ textarea {
           .highlighted-number {
             display: inline-block;
             margin: 0 4px;
+            box-sizing: border-box;
             padding: 2px 8px;
             border-radius: 10px;
             font-size: 24px;
@@ -956,6 +965,7 @@ textarea {
     justify-content: center;
     align-items: center;
     text-align: center;
+    box-sizing: border-box;
     padding: 24px;
     background: rgba(255, 255, 255, 0.05);
     color: #9eb1d6;
@@ -988,7 +998,7 @@ textarea {
     align-items: center;
     justify-content: flex-start;
     gap: 16px;
-    margin-top: 20px;
+    box-sizing: border-box;
     padding: 18px 24px;
     border-radius: 22px;
     flex-wrap: wrap;
@@ -1022,7 +1032,7 @@ textarea {
   &.is-plain {
     color: #cfe2ff;
     background: rgba(53, 122, 255, 0.08);
-    border-color: rgba(83, 146, 255, 0.28);
+    border-color: rgba(83, 146, 255, 0.20);
   }
 }
 
@@ -1059,6 +1069,7 @@ textarea {
 
 @media (max-width: 960px) {
   .app-shell {
+    box-sizing: border-box;
     padding: 18px;
 
     .content-grid {
@@ -1098,8 +1109,7 @@ textarea {
         align-items: stretch;
       }
 
-      .hero-status-group {
-      }
+      .hero-status-group {}
     }
 
     .sms-list-container {
