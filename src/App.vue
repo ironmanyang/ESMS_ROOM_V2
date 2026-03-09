@@ -1,8 +1,5 @@
 <template>
   <div id="app" class="app-shell">
-    <div class="background-glow background-glow-left"></div>
-    <div class="background-glow background-glow-right"></div>
-
     <header class="hero-card">
       <div class="refresh-box">
         <div class="refresh-button" role="button" tabindex="0" @click="refreshLatestSms"
@@ -62,7 +59,7 @@
               <span v-if="phone.time_reg">
                 {{ getCountdown(phone.time_reg + roomTimeoutSeconds) }}
               </span>
-              <span v-else>等待分配</span>
+              <!-- <span v-else>等待分配</span> -->
             </div>
           </button>
         </div>
@@ -100,7 +97,7 @@
               </div>
               <div class="sms-sender-row">
                 <span class="sender-label">发送方</span>
-                <span class="sender-value">{{ sms.sender || '未知来源' }}</span>
+                <span class="sender-value">来自：『{{ sms.sender || '未知来源' }}』</span>
               </div>
               <div class="sms-content" v-html="processSmsContent(sms.message)"></div>
               <div class="sms-actions">
@@ -120,7 +117,7 @@
           </div>
         </div>
 
-        <div v-if="selectedPhone && phonePagination[selectedPhone] && phonePagination[selectedPhone].totalPages > 1"
+        <div v-if="selectedPhone && phonePagination[selectedPhone] && phonePagination[selectedPhone].totalPages > 0"
           class="pagination-wrap">
           <el-pagination :current-page="phonePagination[selectedPhone].currentPage"
             :page-size="phonePagination[selectedPhone].pageSize" :total="phonePagination[selectedPhone].totalItems"
@@ -162,7 +159,14 @@ export default {
       reconnectTimer: null,
       manualClose: false,
       lastUpdatedAt: null,
-      phonePagination: {}
+      phonePagination: {},
+      // 分页相关属性
+      pagination: {
+        currentPage: 1,
+        pageSize: 15,
+        totalItems: 0,
+        totalPages: 0
+      },
     };
   },
   computed: {
@@ -183,7 +187,7 @@ export default {
     },
     lastUpdatedLabel() {
       if (!this.lastUpdatedAt) {
-        return '--';
+        return '暂无';
       }
       return this.formatTime(this.lastUpdatedAt, true);
     }
@@ -292,11 +296,11 @@ export default {
     },
     processWebSocketMessage(data) {
       this.lastUpdatedAt = Math.floor(Date.now() / 1000);
-      console.log('收到消息:', this.lastUpdatedAt);
       if (data.ping === 'pang') {
         this.sendSocketPayload({ ping: 'pang' });
         return;
       }
+      // console.log('收到消息:', data.sms);
 
       if (data.type === 'phone_status' && data.data && this.roomData.phones) {
         const phoneIndex = this.roomData.phones.findIndex(item => item.phone === data.data.phone);
@@ -448,7 +452,6 @@ export default {
       return date.toLocaleString('zh-CN', options);
     },
     formatEndTime(timestamp) {
-      console.log(timestamp, 'aaaa');
       if (!timestamp) {
         return '';
       }
@@ -544,6 +547,21 @@ textarea {
   font: inherit;
 }
 
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #777;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
 // #app {
 //   min-height: 100vh;
 // }
@@ -561,27 +579,6 @@ textarea {
   justify-content: flex-start;
   gap: 20px;
 
-  .background-glow {
-    position: absolute;
-    width: 380px;
-    height: 380px;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.20;
-    pointer-events: none;
-
-    &.background-glow-left {
-      top: -120px;
-      left: -120px;
-      background: #2e6bff;
-    }
-
-    &.background-glow-right {
-      right: -120px;
-      bottom: 10%;
-      background: #18d5bf;
-    }
-  }
 
   .hero-card,
   .panel,
@@ -601,6 +598,7 @@ textarea {
     box-sizing: border-box;
     padding: 20px;
     border-radius: 26px;
+    flex-shrink: 0;
 
     .name-box {
       flex: 1;
@@ -710,6 +708,7 @@ textarea {
 
   .content-grid {
     display: grid;
+    flex: 1;
     grid-template-columns: 360px minmax(0, 1fr);
     gap: 20px;
     min-height: calc(100vh - 300px);
@@ -870,7 +869,7 @@ textarea {
         border-radius: 20px;
         box-sizing: border-box;
         padding: 20px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 246, 255, 0.96));
+        background: linear-gradient(to left bottom, #fffffff5, #a1e3e5);
         color: #14243f;
         border: 1px solid rgba(72, 127, 255, 0.12);
         box-shadow: 0 12px 26px rgba(7, 24, 55, 0.08);
@@ -966,7 +965,7 @@ textarea {
     align-items: center;
     text-align: center;
     box-sizing: border-box;
-    padding: 24px;
+    padding: 20px;
     background: rgba(255, 255, 255, 0.05);
     color: #9eb1d6;
 
@@ -999,9 +998,10 @@ textarea {
     justify-content: flex-start;
     gap: 16px;
     box-sizing: border-box;
-    padding: 18px 24px;
+    padding: 20px;
     border-radius: 22px;
     flex-wrap: wrap;
+    flex-shrink: 0;
 
     .footer-item {
       width: 30%;
@@ -1050,83 +1050,82 @@ textarea {
   }
 }
 
-@media (max-width: 1200px) {
-  .app-shell {
+// @media (max-width: 1200px) {
+//   .app-shell {
 
-    .hero-card,
-    .footer-card {
-      flex-direction: column;
-      align-items: stretch;
-    }
+//     .hero-card,
+//     .footer-card {
+//       flex-direction: column;
+//       align-items: stretch;
+//     }
 
-    .hero-card {
-      .hero-status-group {
-        align-items: flex-start;
-      }
-    }
-  }
-}
+//     .hero-card {
+//       .hero-status-group {
+//         align-items: flex-start;
+//       }
+//     }
+//   }
+// }
 
-@media (max-width: 960px) {
-  .app-shell {
-    box-sizing: border-box;
-    padding: 18px;
+// @media (max-width: 960px) {
+//   .app-shell {
+//     box-sizing: border-box;
+//     padding: 20px;
 
-    .content-grid {
-      grid-template-columns: 1fr;
-    }
+//     .content-grid {
+//       grid-template-columns: 1fr;
+//     }
 
-    .panel {
+//     .panel {
 
-      .panel-header,
-      .sms-item .sms-item-header,
-      .sms-item .sms-sender-row {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+//       .panel-header,
+//       .sms-item .sms-item-header,
+//       .sms-item .sms-sender-row {
+//         flex-direction: column;
+//         align-items: flex-start;
+//       }
 
-      .panel-header-actions {
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-      }
-    }
+//       .panel-header-actions {
+//         width: 100%;
+//         flex-direction: column;
+//         align-items: stretch;
+//       }
+//     }
 
-    .phone-list {
-      .phone-item {
+//     .phone-list {
+//       .phone-item {
 
-        .phone-item-top,
-        .phone-item-bottom {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-      }
-    }
+//         .phone-item-top,
+//         .phone-item-bottom {
+//           flex-direction: column;
+//           align-items: flex-start;
+//         }
+//       }
+//     }
 
-    .hero-card {
-      .refresh-box {
-        flex-direction: column;
-        align-items: stretch;
-      }
+//     .hero-card {
+//       .refresh-box {
+//         flex-direction: column;
+//         align-items: stretch;
+//       }
 
-      .hero-status-group {}
-    }
+//       .hero-status-group {}
+//     }
 
-    .sms-list-container {
-      .sms-list {
-        .sms-item {
-          .sms-actions {
-            width: 100%;
-            flex-direction: column;
-            align-items: stretch;
+//     .sms-list-container {
+//       .sms-list {
+//         .sms-item {
+//           .sms-actions {
+//             width: 100%;
+//             flex-direction: column;
+//             align-items: stretch;
 
-            .el-button {
-              width: 100%;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-</style>
+//             .el-button {
+//               width: 100%;
+//             }
+//           }
+//         }
+//       }
+//     }
+//   }
+// }</style>
