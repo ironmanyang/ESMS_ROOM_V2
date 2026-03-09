@@ -19,9 +19,18 @@
           <span class="dot"></span>
           {{ wsConnected ? '实时连接中' : '连接已断开' }}
         </div>
-        <div class="hero-time">
-          最后更新时间 {{ lastUpdatedLabel }}
+        <div class="hero-time-box">
+          <div class="hero-time">
+            创建时间：{{ formatEndTime(roomData.created_at) || '暂无' }}
+          </div>
+          <div class="hero-time">
+            结束时间：{{ formatEndTime(roomData.end_time) || '暂无' }}
+          </div>
+          <div class="hero-time">
+            最后更新时间：{{ lastUpdatedLabel }}
+          </div>
         </div>
+
       </div>
     </header>
 
@@ -93,22 +102,22 @@
                   </span>
                   <span class="sms-phone">{{ sms.phone || selectedPhone || '通道短信' }}</span>
                 </div>
+                <span class="sender-value">来自：『{{ sms.sender || '未知来源' }}』</span>
                 <span class="sms-time">{{ formatTime(sms.time_get) }}</span>
               </div>
-              <div class="sms-sender-row">
-                <span class="sender-label">发送方</span>
-                <span class="sender-value">来自：『{{ sms.sender || '未知来源' }}』</span>
+              <div class="sms-content-box">
+                <div class="sms-actions">
+                  <div class="sms-actions-btn sms-actions-btn2" @click="copyToClipboard(sms.message)">
+                    复制全文
+                  </div>
+                  <div v-if="extractCode(sms.message)" class="sms-actions-btn sms-actions-btn1"
+                    @click="copyToClipboard(extractCode(sms.message))">
+                    复制验证码
+                  </div>
+                </div>
+                <div class="sms-content" v-html="processSmsContent(sms.message)"></div>
               </div>
-              <div class="sms-content" v-html="processSmsContent(sms.message)"></div>
-              <div class="sms-actions">
-                <el-button size="small" type="primary" @click="copyToClipboard(sms.message)">
-                  复制全文
-                </el-button>
-                <el-button v-if="extractCode(sms.message)" plain size="small"
-                  @click="copyToClipboard(extractCode(sms.message))">
-                  复制验证码
-                </el-button>
-              </div>
+
             </article>
           </div>
           <div v-else class="empty-state">
@@ -126,16 +135,6 @@
       </section>
     </main>
 
-    <footer class="footer-card">
-      <div class="footer-item">
-        <span>创建时间</span>
-        <strong>{{ formatEndTime(roomData.created_at) || '暂无' }}</strong>
-      </div>
-      <div class="footer-item">
-        <span>结束时间</span>
-        <strong>{{ formatEndTime(roomData.end_time) || '暂无' }}</strong>
-      </div>
-    </footer>
   </div>
 </template>
 
@@ -571,18 +570,17 @@ textarea {
   width: 100%;
   height: 100vh;
   box-sizing: border-box;
-  padding: 20px;
+  padding: 15px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
   justify-content: flex-start;
-  gap: 20px;
+  gap: 15px;
 
 
   .hero-card,
-  .panel,
-  .footer-card {
+  .panel {
     position: relative;
     z-index: 1;
     backdrop-filter: blur(20px);
@@ -594,10 +592,10 @@ textarea {
   .hero-card {
     display: flex;
     justify-content: flex-start;
-    gap: 24px;
+    gap: 15px;
     box-sizing: border-box;
-    padding: 20px;
-    border-radius: 26px;
+    padding: 15px;
+    border-radius: 20px;
     flex-shrink: 0;
 
     .name-box {
@@ -699,10 +697,21 @@ textarea {
         }
       }
 
-      .hero-time {
-        color: #9ab0db;
-        font-size: 13px;
+      .hero-time-box {
+        display: flex;
+
+        .hero-time {
+          color: rgb(200, 212, 235);
+          font-size: 13px;
+          padding: 0 20px;
+          border-right: 1px dashed #9ab0db;
+
+          &:last-child {
+            border-right: none;
+          }
+        }
       }
+
     }
   }
 
@@ -710,14 +719,14 @@ textarea {
     display: grid;
     flex: 1;
     grid-template-columns: 360px minmax(0, 1fr);
-    gap: 20px;
-    min-height: calc(100vh - 300px);
+    gap: 15px;
+    min-height: calc(100vh - 150px);
   }
 
   .panel {
-    border-radius: 26px;
+    border-radius: 20px;
     box-sizing: border-box;
-    padding: 20px;
+    padding: 15px;
 
     &.panel-left,
     &.panel-right {
@@ -762,7 +771,7 @@ textarea {
   .phone-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     overflow-y: auto;
     box-sizing: border-box;
     padding-right: 4px;
@@ -771,9 +780,9 @@ textarea {
       border: 1px solid rgba(126, 157, 222, 0.16);
       background: linear-gradient(180deg, rgba(14, 31, 58, 0.96), rgba(11, 24, 46, 0.96));
       color: #fff;
-      border-radius: 18px;
+      border-radius: 15px;
       box-sizing: border-box;
-      padding: 16px;
+      padding: 10px;
       cursor: pointer;
       transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 
@@ -819,7 +828,7 @@ textarea {
       }
 
       .phone-item-bottom {
-        margin-top: 14px;
+        margin-top: 10px;
         color: #89a2cf;
         font-size: 13px;
       }
@@ -868,89 +877,128 @@ textarea {
       .sms-item {
         border-radius: 20px;
         box-sizing: border-box;
-        padding: 20px;
+        padding: 10px;
         background: linear-gradient(to left bottom, #fffffff5, #a1e3e5);
         color: #14243f;
         border: 1px solid rgba(72, 127, 255, 0.12);
         box-shadow: 0 12px 26px rgba(7, 24, 55, 0.08);
 
-        .sms-item-header,
-        .sms-sender-row {
+        .sms-item-header {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-        }
+          justify-content: flex-start;
+          gap: 20px;
 
-        .sms-tags {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
-
-          .sms-keyword,
-          .sms-phone {
-            display: inline-flex;
+          .sms-tags {
+            display: flex;
             align-items: center;
-            height: 20px;
-            box-sizing: border-box;
-            padding: 0 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            min-width: 200px;
+
+            .sms-keyword,
+            .sms-phone {
+              display: inline-flex;
+              align-items: center;
+              height: 20px;
+              box-sizing: border-box;
+              padding: 0 10px;
+              border-radius: 10px;
+              font-size: 12px;
+              font-weight: 700;
+            }
+
+            .sms-keyword {
+              color: #206dff;
+              background: rgba(32, 109, 255, 0.1);
+            }
+
+            .sms-phone {
+              color: #495d86;
+              background: rgba(73, 93, 134, 0.08);
+            }
+
+
           }
-
-          .sms-keyword {
-            color: #206dff;
-            background: rgba(32, 109, 255, 0.1);
-          }
-
-          .sms-phone {
-            color: #495d86;
-            background: rgba(73, 93, 134, 0.08);
-          }
-        }
-
-        .sms-time,
-        .sender-label {
-          color: #6d7ea4;
-          font-size: 13px;
-        }
-
-        .sms-sender-row {
-          margin: 14px 0 12px;
 
           .sender-value {
             font-size: 14px;
             font-weight: 600;
             color: #2d3f61;
+            flex: 1;
+          }
+
+          .sms-time {
+            color: #6d7ea4;
+            font-size: 13px;
           }
         }
 
-        .sms-content {
-          line-height: 1.75;
-          color: #223656;
-          font-size: 15px;
 
-          .highlighted-number {
-            display: inline-block;
-            margin: 0 4px;
-            box-sizing: border-box;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 24px;
-            font-weight: 700;
-            color: #0b5cff;
-            background: rgba(11, 92, 255, 0.1);
-            cursor: pointer;
-          }
-        }
-
-        .sms-actions {
+        .sms-content-box {
+          margin-top: 10px;
+          width: 100%;
           display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-top: 16px;
+          gap: 20px;
+
+
+          .sms-actions {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+
+            .sms-actions-btn {
+              min-width: 80px;
+              height: 30px;
+              line-height: 26px;
+              background: #fff;
+              color: #2d3f61;
+              border-radius: 15px;
+              font-size: 12px;
+              font-weight: 500;
+              text-align: center;
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              cursor: pointer;
+            }
+
+            .sms-actions-btn1 {
+              color: #fff;
+              background: linear-gradient(135deg, #3d78d8, #15d1c3);
+            }
+
+            .sms-actions-btn2 {
+              color: #9cf1d2;
+              background: linear-gradient(135deg, #143838, #15d1c3);
+              border: 1px solid rgba(33, 191, 115);
+            }
+          }
+
+          .sms-content {
+            flex: 1;
+            line-height: 1.75;
+            color: #223656;
+            font-size: 15px;
+
+            .highlighted-number {
+              display: inline-block;
+              margin: 0 4px;
+              box-sizing: border-box;
+              padding: 2px 8px;
+              border-radius: 10px;
+              font-size: 24px;
+              font-weight: 700;
+              color: #0b5cff;
+              background: rgba(11, 92, 255, 0.1);
+              cursor: pointer;
+            }
+          }
+
         }
+
+
       }
     }
   }
@@ -992,33 +1040,6 @@ textarea {
     justify-content: flex-end;
   }
 
-  .footer-card {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 16px;
-    box-sizing: border-box;
-    padding: 20px;
-    border-radius: 22px;
-    flex-wrap: wrap;
-    flex-shrink: 0;
-
-    .footer-item {
-      width: 30%;
-
-      span {
-        display: block;
-        color: #8da3cc;
-        font-size: 12px;
-        margin-bottom: 6px;
-      }
-
-      strong {
-        font-size: 15px;
-        color: #fff;
-      }
-    }
-  }
 }
 
 .el-button {
@@ -1049,83 +1070,4 @@ textarea {
     background: linear-gradient(135deg, #2d7dff, #15d1c3);
   }
 }
-
-// @media (max-width: 1200px) {
-//   .app-shell {
-
-//     .hero-card,
-//     .footer-card {
-//       flex-direction: column;
-//       align-items: stretch;
-//     }
-
-//     .hero-card {
-//       .hero-status-group {
-//         align-items: flex-start;
-//       }
-//     }
-//   }
-// }
-
-// @media (max-width: 960px) {
-//   .app-shell {
-//     box-sizing: border-box;
-//     padding: 20px;
-
-//     .content-grid {
-//       grid-template-columns: 1fr;
-//     }
-
-//     .panel {
-
-//       .panel-header,
-//       .sms-item .sms-item-header,
-//       .sms-item .sms-sender-row {
-//         flex-direction: column;
-//         align-items: flex-start;
-//       }
-
-//       .panel-header-actions {
-//         width: 100%;
-//         flex-direction: column;
-//         align-items: stretch;
-//       }
-//     }
-
-//     .phone-list {
-//       .phone-item {
-
-//         .phone-item-top,
-//         .phone-item-bottom {
-//           flex-direction: column;
-//           align-items: flex-start;
-//         }
-//       }
-//     }
-
-//     .hero-card {
-//       .refresh-box {
-//         flex-direction: column;
-//         align-items: stretch;
-//       }
-
-//       .hero-status-group {}
-//     }
-
-//     .sms-list-container {
-//       .sms-list {
-//         .sms-item {
-//           .sms-actions {
-//             width: 100%;
-//             flex-direction: column;
-//             align-items: stretch;
-
-//             .el-button {
-//               width: 100%;
-//             }
-//           }
-//         }
-//       }
-//     }
-//   }
-// }</style>
+</style>
