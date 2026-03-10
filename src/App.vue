@@ -10,11 +10,8 @@
       <div class="name-box">
         <p class="hero-tag">ESMS</p>
         <h1>{{ roomData.title || '接码室控制台' }}</h1>
-
       </div>
       <div class="hero-status-group">
-
-
         <div :class="wsConnected ? 'is-online' : 'is-offline'" class="status-chip">
           <span class="dot"></span>
           {{ wsConnected ? '实时连接中' : '连接已断开' }}
@@ -36,9 +33,9 @@
 
     <main class="content-grid">
       <section class="panel panel-left">
-        <div class="panel-header">
+        <div class="panel-header" style="justify-content: space-between;">
           <div>
-            <p class="panel-kicker">号码池</p>
+            <!-- <p class="panel-kicker">号码池</p> -->
             <h2>在线号码</h2>
           </div>
           <el-button plain size="small" type="primary" @click="fetchPhoneSms('all')">
@@ -53,22 +50,25 @@
               <div class="phone-meta">
                 <img :src="getCountryFlagImage(phone.code_country)" alt="" class="flag-image">
                 <div>
-                  <div class="phone-number">{{ phone.phone }}</div>
+                  <div class="phone-number">
+                    <span>{{ phone.phone }}</span>
+                    <div class="copy-box" @click.stop="copyToClipboard(phone.phone)">
+                      <i class="el-icon-copy-document"></i>
+                    </div>
+                  </div>
                   <div class="phone-country">
                     {{ getCountryLabel(phone.code_country) }}
                   </div>
                 </div>
               </div>
-              <span :class="getStatusClass(phone.status)" class="status-badge">
-                {{ getStatusText(phone.status) }}
-              </span>
-            </div>
-            <div class="phone-item-bottom">
-              <span>{{ phone.sms_count || 0 }} 条短信</span>
-              <span v-if="phone.time_reg">
-                {{ getCountdown(phone.time_reg + roomTimeoutSeconds) }}
-              </span>
-              <!-- <span v-else>等待分配</span> -->
+              <div class="phone-status">
+                <span :class="getStatusClass(phone.status)" class="status-badge">
+                  {{ getStatusText(phone.status) }}
+                </span>
+                <span class="status-time" v-if="phone.time_reg">
+                  {{ getCountdown(phone.time_reg) }}
+                </span>
+              </div>
             </div>
           </button>
         </div>
@@ -80,15 +80,21 @@
 
       <section class="panel panel-right">
         <div class="panel-header">
-          <div>
-            <p class="panel-kicker">短信流</p>
-            <h2>{{ activePanelTitle }}</h2>
-          </div>
           <div class="panel-header-actions">
             <el-button v-if="selectedPhone" icon="el-icon-back" plain size="small" type="primary" @click="backToAllSms">
               返回最新
             </el-button>
           </div>
+          <div>
+            <!-- <p class="panel-kicker">短信流</p> -->
+            <div class="panel-box">
+              <h2>{{ activePanelTitle }}</h2>
+              <div class="copy-box" v-if="!activePanelTitle.includes('短信')" @click="copyToClipboard(activePanelTitle)">
+                <i class="el-icon-copy-document"></i>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <div class="sms-list-container">
@@ -100,21 +106,20 @@
                   <span v-if="sms.keyword_matched" class="sms-keyword">
                     {{ sms.keyword_matched }}
                   </span>
-                  <span class="sms-phone">{{ sms.phone || selectedPhone || '通道短信' }}</span>
+                  <div class="sms-phone" v-show="sms.phone" @click="copyToClipboard(sms.phone)">
+                    <span>{{ sms.phone }}</span>
+                    <i class="el-icon-copy-document"></i>
+                  </div>
                 </div>
-                <span class="sender-value">来自：『{{ sms.sender || '未知来源' }}』</span>
+                <div class="sender-value">
+                  <span class="" @click="copyToClipboard(sms.sender)">来自：『{{ sms.sender || '未知来源' }}』</span>
+                </div>
+                <div class="sms-actions-btn" @click="copyToClipboard(sms.message)">
+                  复制全文
+                </div>
                 <span class="sms-time">{{ formatTime(sms.time_get) }}</span>
               </div>
               <div class="sms-content-box">
-                <div class="sms-actions">
-                  <div class="sms-actions-btn sms-actions-btn2" @click="copyToClipboard(sms.message)">
-                    复制全文
-                  </div>
-                  <div v-if="extractCode(sms.message)" class="sms-actions-btn sms-actions-btn1"
-                    @click="copyToClipboard(extractCode(sms.message))">
-                    复制验证码
-                  </div>
-                </div>
                 <div class="sms-content" v-html="processSmsContent(sms.message)"></div>
               </div>
 
@@ -412,13 +417,19 @@ export default {
       return texts[status] || '未知状态';
     },
     getCountdown(timestamp) {
-      const diff = Math.max(Number(timestamp || 0) - Math.floor(Date.now() / 1000), 0);
-      if (!diff) {
-        return '可换卡';
+      let now = new Date().getTime();
+      let diff = this.roomData.task_timeout - ((now - timestamp * 1000) / 1000);
+      console.log(diff);
+      // diff转为时分秒
+      const hours = Math.floor(diff / 3600);
+      const minutes = Math.floor((diff % 3600) / 60);
+      const seconds = Math.floor(diff % 60);
+      console.log(hours, minutes, seconds);
+      if (hours > 0) {
+        return `超时时间：${hours}时${minutes}分${seconds}秒`;
+      } else if (minutes > 0) {
+        return `超时时间：${minutes}分${seconds}秒`;
       }
-      const minutes = Math.floor(diff / 60);
-      const seconds = diff % 60;
-      return `剩余 ${minutes}:${String(seconds).padStart(2, '0')}`;
     },
     getCountryLabel(countryCode) {
       if (!countryCode) {
@@ -530,10 +541,8 @@ body {
   margin: 0;
   min-height: 100%;
   font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
-  background: radial-gradient(circle at top left, rgba(78, 132, 255, 0.25), transparent 26%),
-    radial-gradient(circle at top right, rgba(0, 219, 198, 0.16), transparent 18%),
-    linear-gradient(160deg, #07111f 0%, #0a1630 42%, #050912 100%);
-  color: #e8f0ff;
+  background: #0B0E14;
+  color: #E2E8F0;
 }
 
 body {
@@ -584,8 +593,8 @@ textarea {
     position: relative;
     z-index: 1;
     backdrop-filter: blur(20px);
-    background: rgba(8, 20, 39, 0.76);
-    border: 1px solid rgba(118, 160, 255, 0.18);
+    background: rgba(28, 34, 45, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.20);
   }
 
@@ -597,6 +606,7 @@ textarea {
     padding: 15px;
     border-radius: 20px;
     flex-shrink: 0;
+    align-items: center;
 
     .name-box {
       flex: 1;
@@ -613,14 +623,13 @@ textarea {
       letter-spacing: 0.24em;
       font-size: 12px;
       text-transform: uppercase;
-      color: #70b8ff;
+      color: #38BDF8;
     }
 
 
     .refresh-box {
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 12px;
 
       .refresh-button {
         display: inline-flex;
@@ -631,23 +640,23 @@ textarea {
         box-sizing: border-box;
         padding: 0 20px;
         border-radius: 14px;
-        color: #cfe2ff;
-        background: rgba(53, 122, 255, 0.08);
-        border: 1px solid rgba(83, 146, 255, 0.20);
+        color: #E2E8F0;
+        background: rgba(45, 212, 191, 0.15);
+        border: 1px solid rgba(45, 212, 191, 0.3);
         cursor: pointer;
         user-select: none;
         transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
         font-size: 30px;
 
         &:hover {
-          background: rgba(53, 122, 255, 0.16);
-          border-color: rgba(83, 146, 255, 0.48);
+          background: rgba(45, 212, 191, 0.25);
+          border-color: rgba(45, 212, 191, 0.5);
           transform: translateY(-1px);
         }
 
         &:focus {
           outline: none;
-          box-shadow: 0 0 0 3px rgba(45, 125, 255, 0.18);
+          box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
         }
       }
     }
@@ -676,35 +685,36 @@ textarea {
         }
 
         &.is-online {
-          color: #7ef0c7;
-          background: rgba(33, 191, 115, 0.14);
-          border: 1px solid rgba(33, 191, 115, 0.32);
+          color: #2DD4BF;
+          background: rgba(45, 212, 191, 0.15);
+          border: 1px solid rgba(45, 212, 191, 0.3);
 
           .dot {
-            background: #35e0a1;
-            box-shadow: 0 0 12px #35e0a1;
+            background: #2DD4BF;
+            box-shadow: 0 0 12px #2DD4BF;
           }
         }
 
         &.is-offline {
-          color: #ffb3c1;
-          background: rgba(255, 74, 110, 0.12);
-          border: 1px solid rgba(255, 74, 110, 0.20);
+          color: #F87171;
+          background: rgba(248, 113, 113, 0.15);
+          border: 1px solid rgba(248, 113, 113, 0.3);
 
           .dot {
-            background: #ff607e;
+            background: #F87171;
           }
         }
       }
 
       .hero-time-box {
         display: flex;
+        margin-top: 10px;
 
         .hero-time {
-          color: rgb(200, 212, 235);
+          color: #94A3B8;
           font-size: 13px;
           padding: 0 20px;
-          border-right: 1px dashed #9ab0db;
+          border-right: 1px dashed rgba(148, 163, 184, 0.3);
 
           &:last-child {
             border-right: none;
@@ -728,6 +738,10 @@ textarea {
     box-sizing: border-box;
     padding: 15px;
 
+    &.panel-left {
+      background: rgba(21, 25, 33, 0.9);
+    }
+
     &.panel-left,
     &.panel-right {
       display: flex;
@@ -737,9 +751,9 @@ textarea {
 
     .panel-header {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: flex-start;
-      gap: 16px;
+      gap: 20px;
       margin-bottom: 18px;
 
       h2 {
@@ -752,7 +766,15 @@ textarea {
         letter-spacing: 0.24em;
         font-size: 12px;
         text-transform: uppercase;
-        color: #70b8ff;
+        color: #38BDF8;
+      }
+
+      .panel-box {
+        display: flex;
+        gap: 8px;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
       }
 
       .panel-header-actions {
@@ -769,17 +791,17 @@ textarea {
   }
 
   .phone-list {
+    padding: 4px;
     display: flex;
     flex-direction: column;
     gap: 10px;
     overflow-y: auto;
     box-sizing: border-box;
-    padding-right: 4px;
 
     .phone-item {
-      border: 1px solid rgba(126, 157, 222, 0.16);
-      background: linear-gradient(180deg, rgba(14, 31, 58, 0.96), rgba(11, 24, 46, 0.96));
-      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(28, 34, 45, 0.9);
+      color: #E2E8F0;
       border-radius: 15px;
       box-sizing: border-box;
       padding: 10px;
@@ -789,12 +811,11 @@ textarea {
       &:hover,
       &.active {
         transform: translateY(-2px);
-        border-color: rgba(82, 147, 255, 0.65);
-        box-shadow: 0 16px 34px rgba(12, 20, 55, 0.5);
+        border-color: rgba(45, 212, 191, 0.5);
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
       }
 
-      .phone-item-top,
-      .phone-item-bottom {
+      .phone-item-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -804,6 +825,7 @@ textarea {
         display: flex;
         align-items: center;
         gap: 12px;
+
 
         .flag-image {
           width: 42px;
@@ -819,45 +841,59 @@ textarea {
           font-size: 17px;
           font-weight: 700;
           margin-bottom: 4px;
+          display: flex;
+          gap: 8px;
+          flex-direction: row;
+          justify-content: flex-start;
+          align-items: center;
         }
 
         .phone-country {
+          color: #94A3B8;
+          font-size: 13px;
+          text-align: left;
+        }
+      }
+
+      .phone-status {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+
+
+        .status-badge {
+          box-sizing: border-box;
+          padding: 7px 12px;
+          border-radius: 999px;
+          font-size: 12px;
+          font-weight: 700;
+
+          &.status-preparing {
+            background: rgba(251, 191, 36, 0.15);
+            color: #FBBF24;
+          }
+
+          &.status-registering {
+            background: rgba(167, 139, 250, 0.15);
+            color: #A78BFA;
+          }
+
+          &.status-waiting {
+            background: rgba(45, 212, 191, 0.15);
+            color: #2DD4BF;
+          }
+
+          &.status-unknown {
+            background: rgba(255, 255, 255, 0.1);
+            color: #94A3B8;
+          }
+        }
+
+        .status-time {
+          line-height: 1;
           color: #89a2cf;
           font-size: 13px;
-        }
-      }
-
-      .phone-item-bottom {
-        margin-top: 10px;
-        color: #89a2cf;
-        font-size: 13px;
-      }
-
-      .status-badge {
-        box-sizing: border-box;
-        padding: 7px 12px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 700;
-
-        &.status-preparing {
-          background: rgba(255, 184, 0, 0.16);
-          color: #ffd56a;
-        }
-
-        &.status-registering {
-          background: rgba(138, 99, 255, 0.18);
-          color: #c9b7ff;
-        }
-
-        &.status-waiting {
-          background: rgba(39, 203, 140, 0.16);
-          color: #8ef0c0;
-        }
-
-        &.status-unknown {
-          background: rgba(255, 255, 255, 0.1);
-          color: #dce7ff;
         }
       }
     }
@@ -878,10 +914,10 @@ textarea {
         border-radius: 20px;
         box-sizing: border-box;
         padding: 10px;
-        background: linear-gradient(to left bottom, #fffffff5, #a1e3e5);
-        color: #14243f;
-        border: 1px solid rgba(72, 127, 255, 0.12);
-        box-shadow: 0 12px 26px rgba(7, 24, 55, 0.08);
+        background: #1C222D;
+        color: #E2E8F0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 12px 26px rgba(0, 0, 0, 0.3);
 
         .sms-item-header {
           display: flex;
@@ -907,16 +943,18 @@ textarea {
               border-radius: 10px;
               font-size: 12px;
               font-weight: 700;
+              cursor: pointer;
             }
 
             .sms-keyword {
-              color: #206dff;
-              background: rgba(32, 109, 255, 0.1);
+              color: #38BDF8;
+              background: rgba(56, 189, 248, 0.15);
             }
 
             .sms-phone {
-              color: #495d86;
-              background: rgba(73, 93, 134, 0.08);
+              color: #94A3B8;
+              background: rgba(148, 163, 184, 0.15);
+              gap: 4px;
             }
 
 
@@ -925,79 +963,51 @@ textarea {
           .sender-value {
             font-size: 14px;
             font-weight: 600;
-            color: #2d3f61;
+            color: #CBD5E1;
             flex: 1;
+            cursor: pointer;
           }
 
           .sms-time {
-            color: #6d7ea4;
+            color: #64748B;
             font-size: 13px;
           }
+
+          .sms-actions-btn {
+            min-width: 80px;
+            height: 30px;
+            line-height: 26px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            border: 1px solid #0b3631;
+            cursor: pointer;
+            color: #6ae3f8;
+            background: rgba(56, 189, 248, 0.15);
+            // background: linear-gradient(135deg, #0b3631, #0d2b38);
+          }
         }
 
-
-        .sms-content-box {
+        .sms-content {
           margin-top: 10px;
-          width: 100%;
-          display: flex;
-          gap: 20px;
+          line-height: 1.75;
+          color: #E2E8F0;
+          font-size: 15px;
 
-
-          .sms-actions {
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-
-            .sms-actions-btn {
-              min-width: 80px;
-              height: 30px;
-              line-height: 26px;
-              background: #fff;
-              color: #2d3f61;
-              border-radius: 15px;
-              font-size: 12px;
-              font-weight: 500;
-              text-align: center;
-              border: 1px solid rgba(255, 255, 255, 0.2);
-              cursor: pointer;
-            }
-
-            .sms-actions-btn1 {
-              color: #fff;
-              background: linear-gradient(135deg, #3d78d8, #15d1c3);
-            }
-
-            .sms-actions-btn2 {
-              color: #9cf1d2;
-              background: linear-gradient(135deg, #143838, #15d1c3);
-              border: 1px solid rgba(33, 191, 115);
-            }
+          .highlighted-number {
+            display: inline-block;
+            margin: 0 4px;
+            box-sizing: border-box;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #38BDF8;
+            background: rgba(56, 189, 248, 0.15);
+            cursor: pointer;
           }
-
-          .sms-content {
-            flex: 1;
-            line-height: 1.75;
-            color: #223656;
-            font-size: 15px;
-
-            .highlighted-number {
-              display: inline-block;
-              margin: 0 4px;
-              box-sizing: border-box;
-              padding: 2px 8px;
-              border-radius: 10px;
-              font-size: 24px;
-              font-weight: 700;
-              color: #0b5cff;
-              background: rgba(11, 92, 255, 0.1);
-              cursor: pointer;
-            }
-          }
-
         }
-
 
       }
     }
@@ -1014,15 +1024,15 @@ textarea {
     text-align: center;
     box-sizing: border-box;
     padding: 20px;
-    background: rgba(255, 255, 255, 0.05);
-    color: #9eb1d6;
+    background: rgba(255, 255, 255, 0.03);
+    color: #94A3B8;
 
     &.dark {
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.02);
     }
 
     strong {
-      color: #fff;
+      color: #E2E8F0;
       margin-bottom: 10px;
       font-size: 18px;
     }
@@ -1047,13 +1057,13 @@ textarea {
 }
 
 .el-button--primary {
-  background: linear-gradient(135deg, #2d7dff, #15d1c3);
+  background: linear-gradient(135deg, #2DD4BF, #38BDF8);
   border-color: transparent;
 
   &.is-plain {
-    color: #cfe2ff;
-    background: rgba(53, 122, 255, 0.08);
-    border-color: rgba(83, 146, 255, 0.20);
+    color: #E2E8F0;
+    background: rgba(45, 212, 191, 0.15);
+    border-color: rgba(45, 212, 191, 0.3);
   }
 }
 
@@ -1063,11 +1073,11 @@ textarea {
   .btn-next,
   .btn-prev {
     background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    color: #E2E8F0;
   }
 
   .el-pager li:not(.disabled).active {
-    background: linear-gradient(135deg, #2d7dff, #15d1c3);
+    background: linear-gradient(135deg, #2DD4BF, #38BDF8);
   }
 }
 </style>
