@@ -42,9 +42,12 @@
             全部短信
           </el-button>
         </div>
+        <div class="phone-search-box">
+          <el-input v-model="searchPhone" placeholder="搜索手机号" clearable></el-input>
+        </div>
 
-        <div v-if="roomData.phones && roomData.phones.length" class="phone-list">
-          <button v-for="phone in roomData.phones" :key="phone.phone" :class="{ active: selectedPhone === phone.phone }"
+        <div v-if="filteredPhones && filteredPhones.length" class="phone-list">
+          <button v-for="phone in filteredPhones" :key="phone.phone" :class="{ active: selectedPhone === phone.phone }"
             class="phone-item" @click="fetchPhoneSms(phone.phone)">
             <div class="phone-item-top">
               <div class="phone-meta">
@@ -164,7 +167,7 @@ export default {
       manualClose: false,
       lastUpdatedAt: null,
       phonePagination: {},
-      // 分页相关属性
+      searchPhone: '',
       pagination: {
         currentPage: 1,
         pageSize: 15,
@@ -174,6 +177,14 @@ export default {
     };
   },
   computed: {
+    filteredPhones() {
+      if (!this.searchPhone) {
+        return this.roomData.phones || [];
+      }
+      return this.roomData.phones.filter(phone =>
+        String(phone.phone).includes(this.searchPhone)
+      );
+    },
     displaySms() {
       if (this.selectedPhone) {
         return this.phoneSms[this.selectedPhone] || [];
@@ -788,6 +799,47 @@ textarea {
   .phone-list,
   .sms-list-container {
     min-height: 0;
+  }
+
+  .phone-search-box {
+    margin-bottom: 15px;
+
+    .el-input {
+      .el-input__inner {
+        background: rgba(28, 34, 45, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        color: #E2E8F0;
+        font-size: 14px;
+        height: 40px;
+        line-height: 40px;
+        padding: 0 15px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+        &::placeholder {
+          color: #94A3B8;
+        }
+
+        &:focus {
+          border-color: rgba(45, 212, 191, 0.5);
+          box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.1);
+          outline: none;
+        }
+      }
+
+      .el-input__icon {
+        color: #94A3B8;
+        font-size: 16px;
+
+        &.el-icon-circle-close {
+          color: #94A3B8;
+
+          &:hover {
+            color: #E2E8F0;
+          }
+        }
+      }
+    }
   }
 
   .phone-list {
